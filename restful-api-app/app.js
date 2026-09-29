@@ -1,6 +1,8 @@
-	const express = require('express');
-	const app = express();
-	const PORT = 3000;
+require('dotenv').config(); // baris pertama
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const PORT = process.env.PORT || 3000; // sebelumnya: const PORT = 3000;
 
   // Middleware custom 
   // logger : mencatat setiap request yang masuk
@@ -24,7 +26,12 @@ app.use(logger);
     app.get('/hubungi', (req, res) => {
 	  res.send('ini halaman hubungi saya');
 	});
-
+app.use(logger);
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
+app.use(express.json());
     // Middleware agar req.body (JSON) dapat dibaca
     app.use(express.json());
 

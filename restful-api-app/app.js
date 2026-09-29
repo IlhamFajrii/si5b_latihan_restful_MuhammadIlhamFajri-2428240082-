@@ -1,6 +1,17 @@
 	const express = require('express');
 	const app = express();
 	const PORT = 3000;
+
+  // Middleware custom 
+  // logger : mencatat setiap request yang masuk
+  function logger(req, res, next) {
+  const waktu = new Date().toISOString();
+  console.log(`[${waktu}] ${req.method} ${req.url}`);
+  next(); // wajib, agar request lanjut ke handler berikutnya
+}
+
+// Didaftarkan sebelum route agar mencatat seluruh request
+app.use(logger);
 	
 	app.get('/', (req, res) => {
 	  res.send('Server Express.js berjalan!');

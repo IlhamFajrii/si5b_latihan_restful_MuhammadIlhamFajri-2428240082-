@@ -1,50 +1,40 @@
-require('dotenv').config();
-
-const mongoose = require('mongoose');   // tambahkan di antara require lainnya
+require('dotenv').config({ quiet: true });
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const logger = require('./middlewares/logger');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
-
 const mahasiswaRoutes = require('./routes/mahasiswaRoutes');
-const fakultasRoutes = require('./routes/fakultasRoutes');
 const prodiRoutes = require('./routes/prodiRoutes');
-const dosenRoutes = require('./routes/dosenRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET belum diisi di .env');
+  process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------- Middleware global ----------
 app.use(logger);
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-}));
+app.use(cors({ origin: process.env.CORS_ORIGIN, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }));
 app.use(express.json());
-
-// ---------- Route dasar ----------
-app.get('/', (req, res) => {
-  res.send('Server Express.js berjalan!');
+// Express 5: req.body bernilai undefined bila request tidak membawa body JSON
+app.use((req, res, next) => {
+  req.body ??= {};
+  next();
 });
 
-// ---------- Route per modul ----------
+app.get('/', (req, res) => res.send('Server Express.js berjalan!'));
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
 app.use('/mahasiswa', mahasiswaRoutes);
-app.use('/fakultas', fakultasRoutes);
 app.use('/prodi', prodiRoutes);
-app.use('/dosen', dosenRoutes);
 
-// Route untuk mensimulasikan error tak terduga (hapus sebelum dipublikasikan)
-app.get('/error-uji', () => {
-  throw new Error('Kesalahan tak terduga untuk pengujian');
-});
-
-// ---------- Handler 404 dan error handler (paling bawah) ----------
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-//app.listen(PORT, () => {
-  //console.log(`Server berjalan di http://localhost:${PORT}`);
-//});
 mongoose.connect(process.env.DB_URI)
   .then(() => {
     console.log('Terhubung ke MongoDB');
